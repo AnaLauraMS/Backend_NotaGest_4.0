@@ -1,0 +1,51 @@
+# Node modules
+node_modules/
+
+#ignorando a pasta de uploads
+uploads/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# dotenv environment variables
+.env
+.env.*  # caso use variações como .env.development
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+
+# VSCode settings
+.vscode/
+
+# Optional: banco exportado
+*.sql
+*.sqlite   # caso use SQLite
+
+# Coverage (caso use testes futuramente)
+coverage/
+
+# Build output
+dist/
+build/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional: PM2 process file
+pids/
+*.pid
+
+# Optional: logs ou arquivos temporários
+tmp/
+temp/
+
+# Optional: IDEs específicas
+.idea/
+*.sublime-workspace
+*.sublime-project
