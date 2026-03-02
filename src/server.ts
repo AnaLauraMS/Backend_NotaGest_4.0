@@ -1,13 +1,21 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const connectDB = require('./config/mongoDb');
-const setupSwagger = require('./config/swaggerConfig');
-const path = require('path');
-const userRoutes = require('./routes/userRoutes');
-const arquivoRoutes = require('./routes/arquivosRoutes.js');
-const imovelRoutes = require('./routes/imovelRoutes');
-const uploadFileRoutes = require('./routes/uploadFileRoutes');
+// importação das bibliotecas
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// importação dos arquivos internos
+import connectDB from './config/mongoDb.js';
+import setupSwagger from './config/swaggerConfig.js';
+import userRoutes from './routes/userRoutes.js';
+import fileRoutes from './routes/fileRoutes.js';
+import propertyRoutes from './routes/propertyRoutes.js';
+import uploadFileRoutes from './routes/uploadFileRoutes.js';
+
+// Configurando o dirname para ESModules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 connectDB();
@@ -29,14 +37,16 @@ setupSwagger(app);
 
 // Rotas
 app.use('/api/users', userRoutes);
-app.use('/api/uploads', arquivoRoutes);
-app.use('/api/imoveis', imovelRoutes);
+app.use('/api/uploads', fileRoutes);
+app.use('/api/imoveis', propertyRoutes);
 app.use('/api/uploadfile', uploadFileRoutes);
 // Servir arquivos da pasta uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 404
-app.use((req, res) => res.status(404).json({ message: 'Rota não encontrada' }));
+app.use((req: Request, res: Response) =>{
+    res.status(404).json({message: "Rota não encontrada"});
+});
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Backend rodando na porta ${PORT}`));
+app.listen(PORT, () => console.log(`Backend rodando na porta ${PORT}`));
