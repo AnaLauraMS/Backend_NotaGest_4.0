@@ -8,8 +8,10 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "jest"
+    "start": "node dist/server,js",
+    "test": "jest",
+    "build": "tsc",
+  "dev": "tsnd --respawn --transpile-only src/server.ts"
   },
   "dependencies": {
     "axios": "^1.13.2",
@@ -27,8 +29,13 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/multer": "^2.0.0",
+    "@types/node": "^25.3.3",
     "nodemon": "^3.1.10",
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "tsc-watch": "^7.2.0",
+    "typescript": "^5.9.3"
   }
 }
