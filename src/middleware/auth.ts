@@ -3,7 +3,7 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config(); // Garante que process.env.JWT_SECRET está carregado
 
-const protect = (req, res, next) => {
+export const protect = (req, res, next) => {
     // Log #1: Mostra a URL exata que chegou aqui
     console.log(`\n Middleware "protect" acionado para: ${req.method} ${req.originalUrl}`); 
 

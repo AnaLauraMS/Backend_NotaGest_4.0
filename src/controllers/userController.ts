@@ -248,3 +248,23 @@ module.exports = {
   getUserByToken,
   changePassword
 };
+
+export function changePassword(arg0: string, protect: (req: any, res: any, next: any) => any, changePassword: any) {
+  throw new Error('Function not implemented.');
+}
+
+export function createProfileInternal(arg0: string, createProfileInternal: any) {
+  throw new Error('Function not implemented.');
+}
+
+export function getUserProfile(arg0: string, protect: (req: any, res: any, next: any) => any, getUserProfile: any) {
+  throw new Error('Function not implemented.');
+}
+
+export function updateUserProfile(arg0: string, protect: (req: any, res: any, next: any) => any, updateUserProfile: any) {
+  throw new Error('Function not implemented.');
+}
+
+export function deleteUser(arg0: string, protect: (req: any, res: any, next: any) => any, deleteUser: any) {
+  throw new Error('Function not implemented.');
+}
