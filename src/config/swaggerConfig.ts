@@ -1,26 +1,28 @@
-const swaggerJsdoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
+import swaggerJsdoc, { Options } from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import { Express } from 'express';
 
 const PORT = process.env.PORT || 5000;
 
-const swaggerOptions = {
+const swaggerOptions: Options = {
   swaggerDefinition: {
     openapi: '3.0.0',
     info: {
       title: 'Backend Principal - NotaGest',
       version: '1.0.0',
-      description: 'Backend principal da aplicação NotaGest, responsável por usuários, uploads e gerenciamento de imóveis.',
+      description:
+        'Backend principal da aplicação NotaGest, responsável por usuários, uploads e gerenciamento de imóveis.',
       contact: { name: 'Equipe NotaGest', email: 'contato@notagest.com' },
     },
     servers: [
-      { 
-        url: process.env.BACKEND_URL || `http://localhost:${PORT}`, 
-        description: 'Servidor da API NotaGest'
-      }
+      {
+        url: process.env.BACKEND_URL || `http://localhost:${PORT}`,
+        description: 'Servidor da API NotaGest',
+      },
     ],
     components: {
       securitySchemes: {
-        bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
+        bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       },
       schemas: {
         User: {
@@ -30,7 +32,7 @@ const swaggerOptions = {
             name: { type: 'string', example: 'Ana Laura' },
             email: { type: 'string', example: 'ana@example.com' },
             createdAt: { type: 'string', example: '2025-10-20T12:00:00Z' },
-          }
+          },
         },
         Arquivo: {
           type: 'object',
@@ -43,9 +45,15 @@ const swaggerOptions = {
             property: { type: 'string', example: 'Obra da Casa Nova' },
             category: { type: 'string', example: 'Materiais' },
             subcategory: { type: 'string', example: 'Construção' },
-            observation: { type: 'string', example: 'Compra feita na loja ConstruMais' },
-            filePath: { type: 'string', example: '/uploads/1718205958340-nota-cimento.pdf' },
-          }
+            observation: {
+              type: 'string',
+              example: 'Compra feita na loja ConstruMais',
+            },
+            filePath: {
+              type: 'string',
+              example: '/uploads/1718205958340-nota-cimento.pdf',
+            },
+          },
         },
         Imovel: {
           type: 'object',
@@ -59,25 +67,30 @@ const swaggerOptions = {
             cidade: { type: 'string', example: 'Sorocaba' },
             estado: { type: 'string', example: 'SP' },
             tipo: { type: 'string', example: 'Residencial' },
-          }
+          },
         },
         ErrorResponse: {
           type: 'object',
           properties: {
-            error: { type: 'string', example: 'Mensagem de erro' }
-          }
-        }
-      }
-    }
+            error: { type: 'string', example: 'Mensagem de erro' },
+          },
+        },
+      },
+    },
   },
-  apis: ['./../docs/swaggerPaths.js', './routes/**/*.js'] 
+
+  apis: ['./src/docs/*.js', './src/services/routes/*.ts'], 
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
-const setupSwagger = (app) => {
+/**
+ * @function setupSwagger
+ * @param app Instância do Express (Tipada como Express)
+ */
+const setupSwagger = (app: Express): void => {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  console.log("📘 Swagger rodando em /api-docs");
+  console.log('📘 Swagger rodando em /api-docs');
 };
 
-module.exports = setupSwagger;
+export default setupSwagger;
