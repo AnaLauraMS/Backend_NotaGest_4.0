@@ -1,103 +1,21 @@
-
-const userService = require('../../services/userService');
-const User = require('../models/userModel');
-const bcrypt = require('bcryptjs');
-
-
-
-// ==========================
-// 📘 OPENAPI (Swagger) DOCUMENTAÇÃO
-// ==========================
+import { Response } from 'express';
+import bcrypt from 'bcryptjs';
+import * as userService from '../services/userService.js';
+import User from '../models/userModel.js';
+import { IAuthRequest } from '../interfaces/IAuthRequest.js';
+import { IUserBody, IChangePasswordBody } from '../interfaces/IUserRequest.js';
 
 /**
  * @openapi
  * tags:
- *   - name: Usuários
- *     description: Cadastro, login e gerenciamento de usuários
+ * - name: Usuários
+ * description: Cadastro, login e gerenciamento de usuários
  */
 
-/**
- * @openapi
- * /api/users/register:
- *   post:
- *     tags: [Usuários]
- *     summary: Registra um novo usuário
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             example:
- *               name: "Ana Laura"
- *               email: "ana@example.com"
- *               password: "123456"
- *     responses:
- *       201:
- *         description: Usuário criado com sucesso
- *       400:
- *         description: Usuário já existe
- */
-
-/**
- * @openapi
- * /api/users/login:
- *   post:
- *     tags: [Usuários]
- *     summary: Realiza login e retorna o token JWT
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             example:
- *               email: "ana@example.com"
- *               password: "123456"
- *     responses:
- *       200:
- *         description: Login bem-sucedido
- *         content:
- *           application/json:
- *             example:
- *               _id: "671a9a2239fbd101bf4d3cc5"
- *               name: "Ana Laura"
- *               email: "ana@example.com"
- *               token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *       401:
- *         description: Credenciais inválidas
- */
-
-/**
- * @openapi
- * /api/users/{id}:
- *   get:
- *     tags: [Usuários]
- *     summary: Retorna dados do usuário autenticado
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         example: 671a9a2239fbd101bf4d3cc5
- *     responses:
- *       200:
- *         description: Dados do usuário
- *       403:
- *         description: Acesso negado
- *       404:
- *         description: Usuário não encontrado
- */
-
-
-// ==========================
-// 🧩 CONTROLADORES DE USUÁRIO
-// ==========================
-
-
-// --- A. READ (GET /users/:id) ---
-const getUserProfile = async (req, res) => {
+// --- A. READ ---
+export const getUserProfile = async (req: IAuthRequest, res: Response) => {
   const profileId = req.params.id;
-  const authenticatedUserId = req.user.id;
+  const authenticatedUserId = req.user?.id;
 
   if (profileId !== authenticatedUserId) {
     return res.status(403).json({ message: 'Acesso proibido.' });
@@ -107,17 +25,16 @@ const getUserProfile = async (req, res) => {
     const user = await userService.getProfileById(profileId);
     if (!user) return res.status(404).json({ message: 'Perfil não encontrado.' });
     res.status(200).json(user);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao buscar perfil:', error.message);
     res.status(500).json({ message: 'Erro interno ao buscar perfil.' });
   }
 };
 
-
-// --- B. UPDATE (PUT /users/:id) ---
-const updateUserProfile = async (req, res) => {
+// --- B. UPDATE ---
+export const updateUserProfile = async (req: IAuthRequest, res: Response) => {
   const profileId = req.params.id;
-  const authenticatedUserId = req.user.id;
+  const authenticatedUserId = req.user?.id;
 
   if (profileId !== authenticatedUserId) {
     return res.status(403).json({
@@ -126,7 +43,8 @@ const updateUserProfile = async (req, res) => {
   }
 
   try {
-    const updatedUser = await userService.updateProfileById(profileId, req.body);
+    const body: IUserBody = req.body;
+    const updatedUser = await userService.updateProfileById(profileId, body);
     if (!updatedUser) {
       return res.status(404).json({ message: 'Perfil de usuário não encontrado.' });
     }
@@ -135,30 +53,30 @@ const updateUserProfile = async (req, res) => {
       message: 'Perfil atualizado com sucesso!',
       data: updatedUser
     });
-
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao atualizar perfil:', error.message);
     res.status(500).json({ message: 'Erro ao atualizar o perfil.' });
   }
 };
 
-const changePassword = async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  const userEmail = req.user.email; // obtido via middleware 'protect'
+export const changePassword = async (req: IAuthRequest, res: Response) => {
+  const { currentPassword, newPassword }: IChangePasswordBody = req.body;
+  const userEmail = req.user?.email;
 
   try {
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Senhas atual e nova são obrigatórias.' });
+    }
+
     const user = await User.findOne({ email: userEmail });
     if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
 
-    // Verifica senha atual
     const isMatch = await bcrypt.compare(currentPassword, user.senha);
     if (!isMatch) return res.status(400).json({ message: 'Senha atual incorreta.' });
 
-    // Hash nova senha
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // Atualiza no banco
     user.senha = hashedPassword;
     await user.save();
 
@@ -169,11 +87,10 @@ const changePassword = async (req, res) => {
   }
 };
 
-
-// --- C. DELETE (DELETE /users/:id) ---
-const deleteUser = async (req, res) => {
+// --- C. DELETE ---
+export const deleteUser = async (req: IAuthRequest, res: Response) => {
   const profileId = req.params.id;
-  const authenticatedUserId = req.user.id;
+  const authenticatedUserId = req.user?.id;
 
   if (profileId !== authenticatedUserId) {
     return res.status(403).json({
@@ -186,18 +103,16 @@ const deleteUser = async (req, res) => {
     if (!wasDeleted) {
       return res.status(404).json({ message: 'Perfil não encontrado para exclusão.' });
     }
-
     res.status(204).send();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao deletar perfil:', error.message);
     res.status(500).json({ message: 'Erro ao tentar deletar o perfil.' });
   }
 };
 
-
-// --- D. ROTA INTERNA DE CRIAÇÃO (POST /users/internal) ---
-const createProfileInternal = async (req, res) => {
-  const { nome, email, senha } = req.body;
+// --- D. ROTA INTERNA ---
+export const createProfileInternal = async (req: IAuthRequest, res: Response) => {
+  const { nome, email, senha }: IUserBody = req.body;
 
   if (!nome || !email || !senha) {
     return res.status(400).json({ message: 'Nome, email e senha são obrigatórios.' });
@@ -209,7 +124,7 @@ const createProfileInternal = async (req, res) => {
       message: 'Perfil criado com sucesso.', 
       user: newProfile 
     });
-  } catch (err) {
+  } catch (err: any) {
     if (err.message.includes('existe')) {
       return res.status(409).json({ message: 'Perfil já existe.' });
     }
@@ -218,16 +133,14 @@ const createProfileInternal = async (req, res) => {
   }
 };
 
-
-// --- E. OBTÉM DADOS PELO TOKEN (GET /users/token) ---
-const getUserByToken = async (req, res) => {
+// --- E. OBTÉM DADOS PELO TOKEN ---
+export const getUserByToken = async (req: IAuthRequest, res: Response) => {
   try {
-    const userEmail = req.user.email;
-
+    const userEmail = req.user?.email;
     const user = await User.findOne({ email: userEmail }).select('nome email');
 
     if (!user) {
-      return res.status(404).json({ message: 'Usuário não encontrado no banco principal' });
+      return res.status(404).json({ message: 'Usuário não encontrado' });
     }
 
     res.status(200).json({
@@ -239,32 +152,3 @@ const getUserByToken = async (req, res) => {
     res.status(500).json({ message: 'Erro ao buscar usuário' });
   }
 };
-
-module.exports = {
-  getUserProfile,
-  updateUserProfile,
-  deleteUser,
-  createProfileInternal,
-  getUserByToken,
-  changePassword
-};
-
-export function changePassword(arg0: string, protect: (req: any, res: any, next: any) => any, changePassword: any) {
-  throw new Error('Function not implemented.');
-}
-
-export function createProfileInternal(arg0: string, createProfileInternal: any) {
-  throw new Error('Function not implemented.');
-}
-
-export function getUserProfile(arg0: string, protect: (req: any, res: any, next: any) => any, getUserProfile: any) {
-  throw new Error('Function not implemented.');
-}
-
-export function updateUserProfile(arg0: string, protect: (req: any, res: any, next: any) => any, updateUserProfile: any) {
-  throw new Error('Function not implemented.');
-}
-
-export function deleteUser(arg0: string, protect: (req: any, res: any, next: any) => any, deleteUser: any) {
-  throw new Error('Function not implemented.');
-}
