@@ -51,6 +51,7 @@ router.get('/byEmail/:email', async (req: Request, res: Response) => {
     const user = await User.findOne({ email: req.params.email });
     if (!user) return res.status(404).json({ message: 'Usuário não encontrado.' });
     res.json(user);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (err) {
     res.status(500).json({ message: 'Erro ao buscar usuário.' });
   }

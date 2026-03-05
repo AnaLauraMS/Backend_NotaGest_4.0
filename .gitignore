@@ -1,51 +1,27 @@
-# Node modules
+# Dependências
 node_modules/
 
-#ignorando a pasta de uploads
+# Uploads e Dados Sensíveis (Crítico para o NotaGest)
 uploads/
+.env
+.env.*
+
+# Saída de Compilação
+dist/
+build/
+*.tsbuildinfo
 
 # Logs
 logs/
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 
-# dotenv environment variables
-.env
-.env.*  # caso use variações como .env.development
-
-# OS and editor files
+# Sistema e IDEs
 .DS_Store
 Thumbs.db
-
-# VSCode settings
 .vscode/
+.idea/
 
-# Optional: banco exportado
-*.sql
-*.sqlite   # caso use SQLite
-
-# Coverage (caso use testes futuramente)
-coverage/
-
-# Build output
-dist/
-build/
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Optional: PM2 process file
-pids/
-*.pid
-
-# Optional: logs ou arquivos temporários
+# Arquivos temporários
 tmp/
 temp/
-
-# Optional: IDEs específicas
-.idea/
-*.sublime-workspace
-*.sublime-project

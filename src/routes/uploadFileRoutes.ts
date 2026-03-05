@@ -1,87 +1,64 @@
-// routes/uploadFileRoutes.js
+import express, { Response } from 'express';
+import path from 'path';
+import { protect } from '../middleware/auth.js';
+import uploadMiddleware from '../middleware/uploads.js';
+import { IAuthRequest } from '../interfaces/IAuthRequest.js';
 
-const express = require('express');
 const router = express.Router();
-const path = require('path'); // Módulo para manipulação de caminhos de arquivos
-const { protect } = require('../middleware/auth'); // Middleware de autenticação (JWT)
-// Importa a configuração do Multer para processar o arquivo
-const uploadMiddleware = require('../middleware/uploads'); 
 
 /**
  * @swagger
  * tags:
- *   name: Uploads
- *   description: Rotas para envio de arquivos
+ * name: Uploads
+ * description: Rotas para envio de arquivos físicos para o servidor
  */
 
 /**
  * @swagger
  * /api/uploadfile:
- *   post:
- *     summary: Envia um arquivo para o servidor
- *     tags: [Uploads]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               file:
- *                 type: string
- *                 format: binary
- *                 description: Arquivo que será enviado
- *     responses:
- *       200:
- *         description: Arquivo enviado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Arquivo enviado com sucesso!
- *                 filePath:
- *                   type: string
- *                   example: "64f3a8c7e9c7b/myfile.pdf"
- *       400:
- *         description: Nenhum arquivo válido foi enviado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Nenhum arquivo válido foi enviado.
+ * post:
+ * summary: Envia um arquivo para o servidor
+ * tags: [Uploads]
+ * security:
+ * - bearerAuth: []
+ * requestBody:
+ * required: true
+ * content:
+ * multipart/form-data:
+ * schema:
+ * type: object
+ * properties:
+ * file:
+ * type: string
+ * format: binary
  */
-
-
 router.post(
     '/',
-    // 1. Aplica o middleware de autenticação (verifica o token)
+    // 1. Verifica o token
     protect,
-    // 2. Aplica o middleware de upload (processa o arquivo e salva no disco)
+    // 2. Processa o arquivo (Multer)
     uploadMiddleware,
-    // 3. Controller (função final que lida com a resposta)
-    (req, res) => {
-        // Verifica se o arquivo foi processado com sucesso pelo Multer
+    // 3. Controller final
+    (req: IAuthRequest, res: Response) => {
+        // O Multer coloca os dados do arquivo em req.file
         if (!req.file) {
-            console.error('Tentativa de upload falhou: Nenhum arquivo recebido ou arquivo rejeitado.');
+            console.error('Tentativa de upload falhou: Nenhum arquivo recebido.');
             return res.status(400).json({ message: 'Nenhum arquivo válido foi enviado.' });
         }
 
-        // Constrói o caminho relativo do arquivo (pasta do usuário + nome do arquivo)
-        // Substitui barras invertidas por barras normais para compatibilidade de URLs
-        const relativePath = path.join(req.user.id.toString(), req.file.filename).replace(/\\/g, '/');
+        // Verificação de segurança para o ID do usuário (Type Guard)
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ message: 'Usuário não identificado.' });
+        }
 
-        console.log(`✅ Arquivo recebido e salvo: ${req.file.originalname} -> ${req.file.path}`);
-        console.log(`   Retornando caminho relativo para o cliente: ${relativePath}`);
+        // Constrói o caminho relativo para salvar no banco de dados depois
+        // Usamos path.join para ser compatível com Windows/Linux e replace para URL
+        const relativePath = path.join(userId.toString(), req.file.filename).replace(/\\/g, '/');
 
-        // Retorna o caminho onde o arquivo pode ser encontrado para uso futuro
+        console.log(`✅ Arquivo salvo: ${req.file.originalname}`);
+        console.log(`🔗 Caminho relativo: ${relativePath}`);
+
         res.status(200).json({
             message: 'Arquivo enviado com sucesso!',
             filePath: relativePath
@@ -89,5 +66,4 @@ router.post(
     }
 );
 
-// Exporta o roteador configurado
-module.exports = router;
+export default router;

@@ -1,43 +1,53 @@
-// controllers/arquivoController.js
-const Arquivo = require('../models/arquivosModel');
-const User = require('../models/userModel');
+import { Response } from 'express';
+import Arquivo from '../models/fileModel.js';
+import { IAuthRequest } from '../interfaces/IAuthRequest.js';
 
 /**
  * @function getArquivos
- * @description Lista todos os arquivos do usuário logado, opcionalmente filtrando por imóvel
- * @route GET /api/uploads?propertyId=<nome_do_imovel>
- * @access Private
+ * @description Lista todos os arquivos do usuário logado
  */
-exports.getArquivos = async (req, res) => {
-  const propertyName = req.query.propertyId;
+export const getArquivos = async (req: IAuthRequest, res: Response) => {
+  const propertyName = req.query.propertyId as string | undefined;
+  const userId = req.user?.id;
+
+  // Type Guard para garantir que o usuário está autenticado
+  if (!userId) {
+    return res.status(401).json({ message: 'Usuário não autenticado.' });
+  }
+
   console.log(`Rota GET /api/uploads acionada. Filtro Imóvel: ${propertyName || 'Nenhum'}`);
-  console.log("Usuário autenticado ID:", req.user.id);
 
   try {
-    const query = { user: req.user.id };
+    // Definimos o tipo do objeto de query
+    const query: any = { user: userId };
     if (propertyName) query.property = propertyName;
 
     const arquivos = await Arquivo.find(query)
       .populate('property', 'nome') 
       .sort({ createdAt: -1 });
 
-    console.log(`Encontrados ${arquivos.length} arquivos para o usuário.`);
     res.status(200).json(arquivos);
-  } catch (error) {
-    console.error("ERRO getArquivos:", error);
+  } catch (error: any) {
+    console.error("ERRO getArquivos:", error.message);
     res.status(500).json({ message: 'Erro ao buscar arquivos', error: error.message });
   }
 };
 
 /**
  * @function createArquivo
- * @description Cria um novo registro de arquivo
- * @route POST /api/uploads
- * @access Private
  */
-exports.createArquivo = async (req, res) => {
+export const createArquivo = async (req: IAuthRequest, res: Response) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({ message: 'Usuário não autenticado.' });
+  }
+
   try {
-    const { title, value, purchaseDate, property, category, subcategory, observation, filePath } = req.body;
+    const { 
+      title, value, purchaseDate, property, 
+      category, subcategory, observation, filePath 
+    } = req.body;
 
     if (!title || !value || !purchaseDate || !property || !category || !subcategory) {
       return res.status(400).json({ message: 'Campos obrigatórios faltando.' });
@@ -52,61 +62,83 @@ exports.createArquivo = async (req, res) => {
       subcategory,
       observation,
       filePath,
-      user: req.user.id
+      user: userId
     });
 
-    console.log('✅ Arquivo criado:', novoArquivo);
+    console.log('✅ Registro de arquivo criado no DB:', novoArquivo._id);
     res.status(201).json(novoArquivo);
-  } catch (error) {
-    console.error("ERRO createArquivo:", error);
-    res.status(400).json({ message: 'Erro ao criar arquivo', errorDetails: error.message });
+  } catch (error: any) {
+    console.error("ERRO createArquivo:", error.message);
+    res.status(400).json({ message: 'Erro ao criar registro de arquivo', errorDetails: error.message });
   }
 };
 
 /**
  * @function deleteArquivo
- * @description Deleta um arquivo específico
- * @route DELETE /api/uploads/:id
- * @access Private
  */
-exports.deleteArquivo = async (req, res) => {
+export const deleteArquivo = async (req: IAuthRequest, res: Response) => {
+  const fileId = req.params.id;
+  const userId = req.user?.id;
+
+  if (!fileId || !userId) {
+    return res.status(400).json({ message: 'ID do arquivo ou usuário ausente.' });
+  }
+
   try {
-    const arquivo = await Arquivo.findById(req.params.id);
-    if (!arquivo) return res.status(404).json({ message: 'Arquivo não encontrado' });
-    if (arquivo.user.toString() !== req.user.id) return res.status(401).json({ message: 'Não autorizado' });
+    const arquivo = await Arquivo.findById(fileId);
+
+    if (!arquivo) {
+      return res.status(404).json({ message: 'Arquivo não encontrado' });
+    }
+
+    // Verificação de dono do arquivo (segurança extra)
+    if (arquivo.user.toString() !== userId) {
+      return res.status(401).json({ message: 'Não autorizado a excluir este arquivo.' });
+    }
 
     await arquivo.deleteOne();
-    res.status(200).json({ id: req.params.id, message: 'Arquivo removido com sucesso' });
-  } catch (error) {
-    console.error("ERRO deleteArquivo:", error);
-    res.status(500).json({ message: 'Erro no servidor' });
+    res.status(200).json({ id: fileId, message: 'Arquivo removido com sucesso' });
+  } catch (error: any) {
+    console.error("ERRO deleteArquivo:", error.message);
+    res.status(500).json({ message: 'Erro no servidor ao deletar arquivo.' });
   }
 };
 
 /**
  * @function updateArquivo
- * @description Atualiza título e valor de um arquivo
- * @route PUT /api/uploads/:id
- * @access Private
  */
-exports.updateArquivo = async (req, res) => {
+export const updateArquivo = async (req: IAuthRequest, res: Response) => {
+  const fileId = req.params.id;
+  const userId = req.user?.id;
+
+  if (!fileId || !userId) {
+    return res.status(400).json({ message: 'ID do arquivo ou usuário ausente.' });
+  }
+
   try {
     const { title, value } = req.body;
+    
     if (!title && !value) {
       return res.status(400).json({ message: 'Informe pelo menos um campo para atualizar' });
     }
 
-    const arquivo = await Arquivo.findById(req.params.id);
-    if (!arquivo) return res.status(404).json({ message: 'Arquivo não encontrado' });
-    if (arquivo.user.toString() !== req.user.id) return res.status(401).json({ message: 'Não autorizado' });
+    const arquivo = await Arquivo.findById(fileId);
+
+    if (!arquivo) {
+      return res.status(404).json({ message: 'Arquivo não encontrado' });
+    }
+
+    if (arquivo.user.toString() !== userId) {
+      return res.status(401).json({ message: 'Não autorizado.' });
+    }
 
     if (title) arquivo.title = title;
     if (value) arquivo.value = value;
 
     await arquivo.save();
     res.status(200).json(arquivo);
-  } catch (error) {
-    console.error("ERRO updateArquivo:", error);
+  } catch (error: any) {
+    console.error("ERRO updateArquivo:", error.message);
     res.status(500).json({ message: 'Erro ao atualizar arquivo', error: error.message });
   }
 };

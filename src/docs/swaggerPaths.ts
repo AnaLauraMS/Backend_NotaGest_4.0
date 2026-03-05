@@ -25,25 +25,36 @@
 
 /**
  * @swagger
- * /api/uploads:
- *   post:
- *     summary: Faz upload de um arquivo
- *     tags: [Uploads]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               file:
- *                 type: string
- *                 format: binary
- *     responses:
- *       201:
- *         description: Arquivo enviado com sucesso
- *       400:
- *         description: Erro no envio
+ * /api/uploadfile:
+ * post:
+ * summary: Faz upload físico de um arquivo para o servidor
+ * tags: [Uploads]
+ * security:
+ * - bearerAuth: []
+ * requestBody:
+ * required: true
+ * content:
+ * multipart/form-data:
+ * schema:
+ * type: object
+ * properties:
+ * file:
+ * type: string
+ * format: binary
+ * description: O arquivo (PDF, imagem, etc) a ser enviado.
+ * responses:
+ * 200:
+ * description: Arquivo enviado com sucesso
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * message:
+ * type: string
+ * filePath:
+ * type: string
+ * example: "ID_DO_USUARIO/nome_do_arquivo.pdf"
+ * 400:
+ * description: Nenhum arquivo enviado ou formato inválido
  */
