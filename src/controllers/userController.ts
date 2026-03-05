@@ -17,6 +17,13 @@ export const getUserProfile = async (req: IAuthRequest, res: Response) => {
   const profileId = req.params.id;
   const authenticatedUserId = req.user?.id;
 
+  // verificação se o ID existe e se o usuário está autenticado
+  if (!profileId || !authenticatedUserId) {
+    return res.status(400).json({ 
+      message: 'ID do perfil ou usuário autenticado não encontrado.' 
+    });
+  }
+
   if (profileId !== authenticatedUserId) {
     return res.status(403).json({ message: 'Acesso proibido.' });
   }
@@ -35,6 +42,11 @@ export const getUserProfile = async (req: IAuthRequest, res: Response) => {
 export const updateUserProfile = async (req: IAuthRequest, res: Response) => {
   const profileId = req.params.id;
   const authenticatedUserId = req.user?.id;
+
+  // Type Guard: Resolve o erro de string | undefined
+  if (!profileId || !authenticatedUserId) {
+    return res.status(400).json({ message: 'Dados de identificação ausentes.' });
+  }
 
   if (profileId !== authenticatedUserId) {
     return res.status(403).json({
@@ -62,6 +74,11 @@ export const updateUserProfile = async (req: IAuthRequest, res: Response) => {
 export const changePassword = async (req: IAuthRequest, res: Response) => {
   const { currentPassword, newPassword }: IChangePasswordBody = req.body;
   const userEmail = req.user?.email;
+
+  // Verificação de segurança para o e-mail
+  if (!userEmail) {
+    return res.status(401).json({ message: 'Usuário não autenticado.' });
+  }
 
   try {
     if (!currentPassword || !newPassword) {
@@ -91,6 +108,11 @@ export const changePassword = async (req: IAuthRequest, res: Response) => {
 export const deleteUser = async (req: IAuthRequest, res: Response) => {
   const profileId = req.params.id;
   const authenticatedUserId = req.user?.id;
+
+  // Type Guard: Resolve o erro de string | undefined
+  if (!profileId || !authenticatedUserId) {
+    return res.status(400).json({ message: 'Dados de identificação ausentes.' });
+  }
 
   if (profileId !== authenticatedUserId) {
     return res.status(403).json({
@@ -137,6 +159,12 @@ export const createProfileInternal = async (req: IAuthRequest, res: Response) =>
 export const getUserByToken = async (req: IAuthRequest, res: Response) => {
   try {
     const userEmail = req.user?.email;
+
+    // Verificação para garantir que userEmail não é undefined
+    if (!userEmail) {
+      return res.status(401).json({ message: 'Token inválido ou expirado.' });
+    }
+
     const user = await User.findOne({ email: userEmail }).select('nome email');
 
     if (!user) {

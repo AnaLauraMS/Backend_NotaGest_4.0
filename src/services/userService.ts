@@ -1,62 +1,58 @@
-const User = require('../src/models/userModel');
+import User from '../models/userModel.js';
+import { IUser } from '../interfaces/IUser.js';
 
 // CREATE
-const createProfile = async (email, nome, senha) => {
+// Tipamos os parâmetros como string e o retorno como uma Promise que entrega um IUser
+export const createProfile = async (email: string, nome: string, senha: string): Promise<IUser> => {
   try {
     const newProfile = new User({ nome, email, senha });
     await newProfile.save();
     return newProfile;
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 11000) {
-      throw new Error('Usuário já existe.');
+      throw new Error('Usuário já existe.', { cause: error });
     }
     console.error('Erro ao criar perfil:', error.message);
-    throw new Error('Falha na criação do perfil.');
+    throw new Error('Falha na criação do perfil.', { cause: error });
   }
 };
 
 // READ
-const getProfileById = async (_id) => {
-    try {
-        return await User.findById(_id);
-    } catch (error) {
-        console.error('Erro ao buscar perfil:', error.message);
-        throw new Error('Falha ao buscar o perfil.');
-    }
+export const getProfileById = async (_id: string): Promise<IUser | null> => {
+  try {
+    // O Mongoose já sabe que o retorno é IUser | null por causa da definição no Model
+    return await User.findById(_id);
+  } catch (error: any) {
+    console.error('Erro ao buscar perfil:', error.message);
+    throw new Error('Falha ao buscar o perfil.', { cause: error });
+  }
 };
 
 // UPDATE
-const updateProfileById = async (_id, updateData) => {
-    try {
-        delete updateData.email; // Evita alteração de email
-        const updatedProfile = await User.findByIdAndUpdate(
-            _id,
-            { $set: { ...updateData, updatedAt: Date.now() } },
-            { new: true, runValidators: true }
-        );
-        return updatedProfile;
-    } catch (error) {
-        console.error('Erro ao atualizar perfil:', error.message);
-        throw new Error('Falha na atualização do perfil.');
-    }
+// updateData usa 'Partial<IUser>' para indicar que pode receber qualquer campo da interface IUser
+export const updateProfileById = async (_id: string, updateData: Partial<IUser>): Promise<IUser | null> => {
+  try {
+    delete updateData.email; // Evita alteração de email por segurança
+    
+    const updatedProfile = await User.findByIdAndUpdate(
+      _id,
+      { $set: { ...updateData, updatedAt: new Date() } },
+      { new: true, runValidators: true }
+    );
+    return updatedProfile;
+  } catch (error: any) {
+    console.error('Erro ao atualizar perfil:', error.message);
+    throw new Error('Falha na atualização do perfil.', { cause: error });
+  }
 };
 
 // DELETE
-const deleteProfileById = async (_id) => {
-    try {
-        const result = await User.findByIdAndDelete(_id);
-        return !!result;
-    } catch (error) {
-        console.error('Erro ao deletar perfil:', error.message);
-        throw new Error('Falha na exclusão do perfil.');
-    }
-};
-
-
-
-module.exports = {
-    createProfile,
-    getProfileById,
-    updateProfileById,
-    deleteProfileById,
+export const deleteProfileById = async (_id: string): Promise<boolean> => {
+  try {
+    const result = await User.findByIdAndDelete(_id);
+    return !!result;
+  } catch (error: any) {
+    console.error('Erro ao deletar perfil:', error.message);
+    throw new Error('Falha na exclusão do perfil.', { cause: error });
+  }
 };
