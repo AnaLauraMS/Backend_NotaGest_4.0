@@ -1,18 +1,18 @@
-// @ts-nocheck
-const { getImoveis, getImoveisNomes, createImovel, deleteImovel } = require('../controllers/imovelController');
-const Imovel = require('../models/imovelModel');
-const User = require('../models/userModel');
-const Arquivo = require('../models/arquivosModel');
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { getImoveis, getImoveisNomes, createImovel, deleteImovel } from '../src/controllers/propertyController.js';
+import Imovel from '../src/models/propertyModel.js';
+import User from '../src/models/userModel.js';      
+import Arquivo from '../src/models/fileModel.js';   
 
-jest.mock('../models/imovelModel');
-jest.mock('../models/userModel');
-jest.mock('../models/arquivosModel');
+jest.mock('../src/models/propertyModel.js');        
+jest.mock('../src/models/userModel.js');
+jest.mock('../src/models/fileModel.js');
 
 describe('Imoveis Controller', () => {
-  let req, res;
+  let req: any, res: any;
 
   beforeEach(() => {
-    req = { user: { _id: '123', email: 'teste@teste.com' }, body: {}, params: { id: 'abc' } };
+    req = { user: { id: '123', email: 'teste@teste.com' }, body: {}, params: { id: 'abc' } };
     res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
     jest.clearAllMocks();
   });
@@ -21,7 +21,7 @@ describe('Imoveis Controller', () => {
   describe('getImoveis', () => {
     it('deve retornar lista de imóveis', async () => {
       const fakeImoveis = [{ nome: 'Casa 1' }, { nome: 'Apartamento 2' }];
-      Imovel.find.mockReturnValue({ sort: jest.fn().mockResolvedValue(fakeImoveis) });
+      (Imovel.find as any).mockReturnValue({ sort: jest.fn().mockResolvedValue(fakeImoveis) });
 
       await getImoveis(req, res);
 
@@ -41,7 +41,7 @@ describe('Imoveis Controller', () => {
   describe('getImoveisNomes', () => {
     it('deve retornar apenas nomes dos imóveis', async () => {
       const fakeImoveis = [{ nome: 'Casa 1' }, { nome: 'Apartamento 2' }];
-      Imovel.find.mockReturnValue({ select: jest.fn().mockResolvedValue(fakeImoveis) });
+      (Imovel.find as any).mockReturnValue({ select: jest.fn().mockResolvedValue(fakeImoveis) });
 
       await getImoveisNomes(req, res);
 
@@ -61,8 +61,8 @@ describe('Imoveis Controller', () => {
   describe('createImovel', () => {
     it('deve criar um novo imóvel', async () => {
       req.body = { nome: 'Casa Nova', cep: '12345', rua: 'Rua A', numero: '10', bairro: 'Centro', cidade: 'Cidade', estado: 'ST', tipo: 'Apartamento' };
-      User.findOne.mockResolvedValue({ _id: '123', email: 'teste@teste.com' });
-      Imovel.create.mockResolvedValue({ ...req.body, user: '123' });
+      (User.findOne as any).mockResolvedValue({ _id: '123', email: 'teste@teste.com' });
+      (Imovel.create as any).mockResolvedValue({ ...req.body, user: '123' });
 
       await createImovel(req, res);
 
@@ -79,7 +79,7 @@ describe('Imoveis Controller', () => {
 
     it('deve retornar 404 se usuário não existir', async () => {
       req.body = { nome: 'Casa Nova' };
-      User.findOne.mockResolvedValue(null);
+      (User.findOne as any).mockResolvedValue(null);
       await createImovel(req, res);
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ message: 'Usuário não encontrado.' });
@@ -89,8 +89,8 @@ describe('Imoveis Controller', () => {
   // deleteImovel
   describe('deleteImovel', () => {
     it('deve excluir um imóvel sem notas vinculadas', async () => {
-      Arquivo.countDocuments.mockResolvedValue(0);
-      Imovel.findByIdAndDelete.mockResolvedValue({ _id: 'abc' });
+      (Arquivo.countDocuments as any).mockResolvedValue(0);
+      (Imovel.findByIdAndDelete as any).mockResolvedValue({ _id: 'abc' });
 
       await deleteImovel(req, res);
 
@@ -98,7 +98,7 @@ describe('Imoveis Controller', () => {
     });
 
     it('deve retornar 400 se houver notas vinculadas', async () => {
-      Arquivo.countDocuments.mockResolvedValue(2);
+      (Arquivo.countDocuments as any).mockResolvedValue(2);
 
       await deleteImovel(req, res);
 
@@ -107,8 +107,8 @@ describe('Imoveis Controller', () => {
     });
 
     it('deve retornar 404 se imóvel não for encontrado', async () => {
-      Arquivo.countDocuments.mockResolvedValue(0);
-      Imovel.findByIdAndDelete.mockResolvedValue(null);
+      (Arquivo.countDocuments as any).mockResolvedValue(0);
+      (Imovel.findByIdAndDelete as any).mockResolvedValue(null);
 
       await deleteImovel(req, res);
 
