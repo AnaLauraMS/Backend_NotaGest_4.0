@@ -29,10 +29,10 @@ jobs:
 
       #PARTE 2 - A partir daqui (descomentar)
       - name: Checkout do código
-             uses: actions/checkout@v2
-             with:
-               token: ${{ secrets.GH_TOKEN }}
-               fetch-depth: 0 # Buscar tags
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+            fetch-depth: 0 # Buscar tags
 
 
       - name: Instalar semver
