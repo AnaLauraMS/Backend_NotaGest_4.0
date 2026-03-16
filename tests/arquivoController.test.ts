@@ -1,11 +1,11 @@
-// @ts-nocheck
-const { getArquivos, createArquivo, deleteArquivo, updateArquivo } = require('../controllers/arquivosController');
-const Arquivo = require('../models/arquivosModel');
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { getArquivos, createArquivo, deleteArquivo, updateArquivo } from '../src/controllers/fileController.js';
+import Arquivo from '../src/models/fileModel.js';
 
-jest.mock('../models/arquivosModel');
+jest.mock('../src/models/fileModel.js');
 
 describe('Arquivo Controller', () => {
-  let req, res;
+  let req: any, res: any;
 
   beforeEach(() => {
     req = { user: { id: '123' }, body: {}, params: { id: 'abc' }, query: {} };
@@ -17,7 +17,7 @@ describe('Arquivo Controller', () => {
   describe('getArquivos', () => {
     it('deve retornar lista de arquivos', async () => {
       const fakeArquivos = [{ title: 'Arquivo 1' }, { title: 'Arquivo 2' }];
-      Arquivo.find.mockReturnValue({
+      (Arquivo.find as any).mockReturnValue({
         populate: jest.fn().mockReturnValue({
           sort: jest.fn().mockResolvedValue(fakeArquivos)
         })
@@ -32,7 +32,7 @@ describe('Arquivo Controller', () => {
     it('deve filtrar por imóvel se query.propertyId existir', async () => {
       req.query.propertyId = 'Casa 1';
       const fakeArquivos = [{ title: 'Arquivo Casa 1' }];
-      Arquivo.find.mockReturnValue({
+      (Arquivo.find as any).mockReturnValue({
         populate: jest.fn().mockReturnValue({
           sort: jest.fn().mockResolvedValue(fakeArquivos)
         })
@@ -49,7 +49,7 @@ describe('Arquivo Controller', () => {
   describe('createArquivo', () => {
     it('deve criar um novo arquivo', async () => {
       req.body = { title: 'Doc', value: 100, purchaseDate: '2025-01-01', property: 'abc', category: 'Cat', subcategory: 'Sub', observation: '', filePath: '/file/path' };
-      Arquivo.create.mockResolvedValue({ ...req.body, user: '123' });
+      (Arquivo.create as any).mockResolvedValue({ ...req.body, user: '123' });
 
       await createArquivo(req, res);
 
@@ -68,8 +68,8 @@ describe('Arquivo Controller', () => {
   // deleteArquivo
   describe('deleteArquivo', () => {
     it('deve deletar arquivo com usuário correto', async () => {
-      const mockArquivo = { user: '123', deleteOne: jest.fn().mockResolvedValue() };
-      Arquivo.findById.mockResolvedValue(mockArquivo);
+      const mockArquivo = { user: '123', deleteOne: jest.fn().mockResolvedValue(undefined) };
+      (Arquivo.findById as any).mockResolvedValue(mockArquivo);
 
       await deleteArquivo(req, res);
 
@@ -79,7 +79,7 @@ describe('Arquivo Controller', () => {
     });
 
     it('deve retornar 404 se arquivo não existir', async () => {
-      Arquivo.findById.mockResolvedValue(null);
+      (Arquivo.findById as any).mockResolvedValue(null);
       await deleteArquivo(req, res);
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ message: 'Arquivo não encontrado' });
@@ -87,12 +87,12 @@ describe('Arquivo Controller', () => {
 
     it('deve retornar 401 se usuário não autorizado', async () => {
       const mockArquivo = { user: '999', deleteOne: jest.fn() };
-      Arquivo.findById.mockResolvedValue(mockArquivo);
+      (Arquivo.findById as any).mockResolvedValue(mockArquivo);
 
       await deleteArquivo(req, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Não autorizado' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Não autorizado a excluir este arquivo.' });
     });
   });
 
@@ -100,8 +100,8 @@ describe('Arquivo Controller', () => {
   describe('updateArquivo', () => {
     it('deve atualizar título e valor de um arquivo', async () => {
       req.body = { title: 'Novo Título', value: 200 };
-      const mockArquivo = { user: '123', save: jest.fn().mockResolvedValue(), title: '', value: 0 };
-      Arquivo.findById.mockResolvedValue(mockArquivo);
+      const mockArquivo = { user: '123', save: jest.fn().mockResolvedValue(undefined), title: '', value: 0 };
+      (Arquivo.findById as any).mockResolvedValue(mockArquivo);
 
       await updateArquivo(req, res);
 
@@ -120,7 +120,7 @@ describe('Arquivo Controller', () => {
     });
 
     it('deve retornar 404 se arquivo não existir', async () => {
-      Arquivo.findById.mockResolvedValue(null);
+      (Arquivo.findById as any).mockResolvedValue(null);
       req.body = { title: 'Novo' };
       await updateArquivo(req, res);
       expect(res.status).toHaveBeenCalledWith(404);
@@ -129,13 +129,13 @@ describe('Arquivo Controller', () => {
 
     it('deve retornar 401 se usuário não autorizado', async () => {
       const mockArquivo = { user: '999', save: jest.fn() };
-      Arquivo.findById.mockResolvedValue(mockArquivo);
+      (Arquivo.findById as any).mockResolvedValue(mockArquivo);
       req.body = { title: 'Novo' };
 
       await updateArquivo(req, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Não autorizado' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Não autorizado.' });
     });
   });
 });
