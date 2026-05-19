@@ -52,11 +52,11 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Instalar semver
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/story-book'
         run: npm install -g semver
 
       - name: Criar nova tag caso não exista
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/story-book'
         id: create_initial_tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,7 +69,7 @@ jobs:
           fi
 
       - name: Calcular nova versão
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/story-book'
         id: version
         run: |
           # Busca a última tag que segue o padrão vX.X.X
@@ -115,7 +115,7 @@ jobs:
           echo "new_version=$NEW_VERSION" >> $GITHUB_ENV
 
       - name: Atualizar versão no package.json
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/story-book'
         run: |
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           if [ "$CURRENT_VERSION" = "${{ env.new_version }}" ]; then
@@ -125,7 +125,7 @@ jobs:
           fi  
 
       - name: Commit e push
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/story-book'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -147,7 +147,7 @@ jobs:
             git tag v${{ env.new_version }}
           fi
           
-          git push origin main --tags
+          git push origin HEAD --tags
 
       # 🐳 DOCKER BUILD & PUSH (Para Main)
       - name: Build and Push Docker Image (Main)
