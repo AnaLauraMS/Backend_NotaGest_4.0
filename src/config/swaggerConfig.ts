@@ -5,11 +5,24 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const packageJsonPath = path.resolve(__dirname, '../../package.json');
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-const appVersion = packageJson.version;
+const getPackageVersion = (): string => {
+  try {
+    if (typeof __dirname !== 'undefined') {
+      const packageJsonPath = path.resolve(__dirname, '../../package.json');
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      return packageJson.version || '1.0.0';
+    } else {
+      const metaUrl = new Function('return import.meta.url')();
+      const currentDir = path.dirname(fileURLToPath(metaUrl));
+      const packageJsonPath = path.resolve(currentDir, '../../package.json');
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      return packageJson.version || '1.0.0';
+    }
+  } catch {
+    return '1.0.0';
+  }
+};
+const appVersion = getPackageVersion();
 
 const PORT = process.env.PORT || 5000;
 
