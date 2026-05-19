@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1779205644084" clover="3.2.0">
-  <project timestamp="1779205644085" name="All files">
-    <metrics statements="603" coveredstatements="555" conditionals="210" coveredconditionals="169" methods="56" coveredmethods="53" elements="869" coveredelements="777" complexity="0" loc="603" ncloc="603" packages="8" files="23" classes="23"/>
+<coverage generated="1779210188375" clover="3.2.0">
+  <project timestamp="1779210188375" name="All files">
+    <metrics statements="610" coveredstatements="562" conditionals="212" coveredconditionals="170" methods="57" coveredmethods="54" elements="879" coveredelements="786" complexity="0" loc="610" ncloc="610" packages="8" files="23" classes="23"/>
     <package name="src">
       <metrics statements="39" coveredstatements="36" conditionals="8" coveredconditionals="4" methods="2" coveredmethods="1"/>
       <file name="server.ts" path="C:\Users\Ranzer\OneDrive\Área de Trabalho\NotaGest\Backend_NotaGest_4.0\src\server.ts">
@@ -48,7 +48,7 @@
       </file>
     </package>
     <package name="src.config">
-      <metrics statements="22" coveredstatements="21" conditionals="10" coveredconditionals="9" methods="2" coveredmethods="2"/>
+      <metrics statements="29" coveredstatements="28" conditionals="12" coveredconditionals="10" methods="3" coveredmethods="3"/>
       <file name="mongoDb.ts" path="C:\Users\Ranzer\OneDrive\Área de Trabalho\NotaGest\Backend_NotaGest_4.0\src\config\mongoDb.ts">
         <metrics statements="13" coveredstatements="12" conditionals="6" coveredconditionals="5" methods="1" coveredmethods="1"/>
         <line num="2" count="8" type="stmt"/>
@@ -66,16 +66,23 @@
         <line num="31" count="8" type="stmt"/>
       </file>
       <file name="swaggerConfig.ts" path="C:\Users\Ranzer\OneDrive\Área de Trabalho\NotaGest\Backend_NotaGest_4.0\src\config\swaggerConfig.ts">
-        <metrics statements="9" coveredstatements="9" conditionals="4" coveredconditionals="4" methods="1" coveredmethods="1"/>
+        <metrics statements="16" coveredstatements="16" conditionals="6" coveredconditionals="5" methods="2" coveredmethods="2"/>
         <line num="1" count="7" type="stmt"/>
         <line num="2" count="7" type="stmt"/>
-        <line num="5" count="7" type="cond" truecount="2" falsecount="0"/>
-        <line num="7" count="7" type="stmt"/>
-        <line num="85" count="7" type="stmt"/>
-        <line num="91" count="7" type="stmt"/>
-        <line num="92" count="7" type="stmt"/>
-        <line num="93" count="7" type="stmt"/>
-        <line num="96" count="7" type="stmt"/>
+        <line num="4" count="7" type="stmt"/>
+        <line num="5" count="7" type="stmt"/>
+        <line num="8" count="7" type="stmt"/>
+        <line num="9" count="7" type="stmt"/>
+        <line num="10" count="7" type="stmt"/>
+        <line num="11" count="7" type="stmt"/>
+        <line num="13" count="7" type="stmt"/>
+        <line num="15" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="17" count="7" type="stmt"/>
+        <line num="95" count="7" type="stmt"/>
+        <line num="101" count="7" type="stmt"/>
+        <line num="102" count="7" type="stmt"/>
+        <line num="103" count="7" type="stmt"/>
+        <line num="106" count="7" type="stmt"/>
       </file>
     </package>
     <package name="src.controllers">
