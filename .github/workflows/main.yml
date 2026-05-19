@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - development
+      - feat/story-book
 
 jobs:
   ci-test:
@@ -158,7 +159,7 @@ jobs:
 
       # 🐳 DOCKER BUILD & PUSH (Para Development)
       - name: Build and Push Docker Image (Development)
-        if: github.ref == 'refs/heads/development'
+        if: github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feat/story-book'
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -182,7 +183,7 @@ jobs:
   deploy-hml:
     name: Deploy - Homologação (HML)
     needs: ci-test
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feat/story-book'
     environment:
       name: hml
     runs-on: ubuntu-latest
