@@ -1,6 +1,16 @@
 import swaggerJsdoc, { Options } from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const getPackageVersion = (): string => {
+  const packageJsonPath = path.join(process.cwd(), 'package.json');
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+  return packageJson.version;
+};
+const appVersion = getPackageVersion();
 
 const PORT = process.env.PORT || 5000;
 
@@ -9,7 +19,7 @@ const swaggerOptions: Options = {
     openapi: '3.0.0',
     info: {
       title: 'Backend Principal - NotaGest',
-      version: '1.0.0',
+      version: appVersion || '1.0.0',
       description:
         'Backend principal da aplicação NotaGest, responsável por usuários, uploads e gerenciamento de imóveis.',
       contact: { name: 'Equipe NotaGest', email: 'contato@notagest.com' },
