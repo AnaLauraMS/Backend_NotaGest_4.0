@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - main
+      - development
+      - feat/story-book
+
+permissions:
+  contents: write
 
 jobs:
-  version:
+  ci-test:
+    name: Continuous Integration (CI)
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
@@ -14,7 +20,7 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Configurar Node.js
@@ -36,7 +42,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Testes unitarios
-        run: npm test    
+        run: npm test -- --coverage
 
       # 🔍 SONAR CLOUD SCAN
       - name: SonarCloud Scan
@@ -45,14 +51,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-
       - name: Instalar semver
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/story-book'
         run: npm install -g semver
 
       - name: Criar nova tag caso não exista
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/story-book'
         id: create_initial_tag
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
@@ -62,6 +69,7 @@ jobs:
           fi
 
       - name: Calcular nova versão
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/story-book'
         id: version
         run: |
           # Busca a última tag que segue o padrão vX.X.X
@@ -107,19 +115,19 @@ jobs:
           echo "new_version=$NEW_VERSION" >> $GITHUB_ENV
 
       - name: Atualizar versão no package.json
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/story-book'
         run: |
-         CURRENT_VERSION=$(node -p "require('./package.json').version")
-    
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
           if [ "$CURRENT_VERSION" = "${{ env.new_version }}" ]; then
             echo "Versão já está atual. Pulando atualização."
           else
-          npm version ${{ env.new_version }} --no-git-tag-version
+            npm version ${{ env.new_version }} --no-git-tag-version
           fi  
 
-          
       - name: Commit e push
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/story-book'
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
@@ -139,10 +147,11 @@ jobs:
             git tag v${{ env.new_version }}
           fi
           
-          git push origin main --tags
+          git push origin HEAD --tags
 
-      # 🐳 DOCKER BUILD & PUSH
-      - name: Build and Push Docker Image
+      # 🐳 DOCKER BUILD & PUSH (Para Main)
+      - name: Build and Push Docker Image (Main)
+        if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -150,6 +159,16 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/notagest-backend:latest
             ${{ secrets.DOCKER_USERNAME }}/notagest-backend:v${{ env.new_version }}
+
+      # 🐳 DOCKER BUILD & PUSH (Para Development)
+      - name: Build and Push Docker Image (Development)
+        if: github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feat/story-book'
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/notagest-backend:dev
 
       - name: Enviar e-mail de falha
         uses: dawidd6/action-send-mail@v3
@@ -160,11 +179,32 @@ jobs:
           secure: true
           username: ${{ secrets.EMAIL_ORIGEM }}
           password: ${{ secrets.SENHA_EMAIL }}
-          subject: Falha no Pipeline - ${{ github.repository }}
+          subject: Falha no Pipeline Backend - ${{ github.repository }}
           to: ${{ secrets.EMAIL_DESTINO }}
           from: ${{ secrets.EMAIL_ORIGEM }}
 
-      # 💓 BETTER STACK HEARTBEAT (Monitoramento de Pipeline)
-      - name: Better Stack Heartbeat
-        if: success()
-        run: curl "${{ secrets.BETTERSTACK_HEARTBEAT_BACKEND }}"
+  deploy-hml:
+    name: Deploy - Homologação (HML)
+    needs: ci-test
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feat/story-book'
+    environment:
+      name: hml
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger HML Deploy Hook
+        run: |
+          echo "Disparando deploy para o ambiente de Homologação (HML)..."
+          # curl -f -X POST "${{ secrets.RENDER_DEPLOY_HOOK_HML }}"
+
+  deploy-prod:
+    name: Deploy - Produção (PROD)
+    needs: [ci-test, deploy-hml]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: prod
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger PROD Deploy Hook
+        run: |
+          echo "Disparando deploy para o ambiente de Produção (PROD)..."
+          # curl -f -X POST "${{ secrets.RENDER_DEPLOY_HOOK_PROD }}"
