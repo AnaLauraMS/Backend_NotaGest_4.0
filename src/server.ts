@@ -32,9 +32,11 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:4000',
+    "http://3.94.218.162:3000",
+    "http://3.94.218.162:4000",
     'https://nota-gest.vercel.app'
   ],
-  methods: ['GET','POST','PUT','DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
 
