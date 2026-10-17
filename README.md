@@ -313,7 +313,7 @@ Tanto o frontend quanto o backend possuem fluxos de trabalho configurados no **G
 
 Os deploys ativos do projeto em produção estão disponíveis nos links abaixo:
 
-- **Frontend (Interface Web):** [Acesse aqui via Vercel](https://nota-gest-frontend.vercel.app/)  
+- **Frontend (Interface Web):** [Acesse aqui via Vercel](https://notagest.vercel.app/)  
 - **Backend (API Principal):** [Acesse aqui via Render](https://notagest-0o2r.onrender.com/)
 
 ---
